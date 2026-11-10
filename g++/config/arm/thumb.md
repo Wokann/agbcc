@@ -1007,7 +1007,10 @@
   ""
   "
 {
-  if (TARGET_LONG_CALLS && GET_CODE (XEXP (operands[0], 0)) != REG)
+  if ((TARGET_LONG_CALLS
+       || (GET_CODE (XEXP (operands[0], 0)) == SYMBOL_REF
+           && SYMBOL_REF_FLAG (XEXP (operands[0], 0))))
+      && GET_CODE (XEXP (operands[0], 0)) != REG)
     XEXP (operands[0], 0) = force_reg (Pmode, XEXP (operands[0], 0));
 }")
 
@@ -1036,7 +1039,10 @@
   ""
   "
 {
-  if (TARGET_LONG_CALLS && GET_CODE (XEXP (operands[1], 0)) != REG)
+  if ((TARGET_LONG_CALLS
+       || (GET_CODE (XEXP (operands[1], 0)) == SYMBOL_REF
+           && SYMBOL_REF_FLAG (XEXP (operands[1], 0))))
+      && GET_CODE (XEXP (operands[1], 0)) != REG)
     XEXP (operands[1], 0) = force_reg (Pmode, XEXP (operands[1], 0));
 }")
 
@@ -1061,7 +1067,8 @@
 (define_insn "*call_insn"
   [(call (mem:SI (match_operand:SI 0 "" "i"))
 	 (match_operand:SI 1 "" ""))]
-  "! TARGET_LONG_CALLS && GET_CODE (operands[0]) == SYMBOL_REF"
+  "! TARGET_LONG_CALLS && GET_CODE (operands[0]) == SYMBOL_REF
+   && ! SYMBOL_REF_FLAG (operands[0])"
   "bl\\t%a0"
 [(set_attr "length" "4")])
 
@@ -1069,7 +1076,8 @@
   [(set (match_operand 0 "s_register_operand" "=l")
 	(call (mem:SI (match_operand 1 "" "i"))
 	      (match_operand 2 "" "")))]
-  "! TARGET_LONG_CALLS && GET_CODE (operands[1]) == SYMBOL_REF"
+  "! TARGET_LONG_CALLS && GET_CODE (operands[1]) == SYMBOL_REF
+   && ! SYMBOL_REF_FLAG (operands[1])"
   "bl\\t%a1"
 [(set_attr "length" "4")])
 

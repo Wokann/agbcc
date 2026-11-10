@@ -1523,7 +1523,24 @@ arm_valid_machine_decl_attribute(tree decl, tree attributes, tree attr, tree arg
     if (is_attribute_p("naked", attr))
         return TREE_CODE(decl) == FUNCTION_DECL;
 
+    if (is_attribute_p("long_call", attr))
+        return TREE_CODE(decl) == FUNCTION_DECL;
+
     return 0;
+}
+
+/* A per-declaration far call uses the same indirect-call machinery as
+   -mlong-calls, without changing other calls in the translation unit. */
+void
+thumb_encode_section_info(tree decl)
+{
+    if (TREE_CODE(decl) == FUNCTION_DECL)
+    {
+        rtx address = XEXP(DECL_RTL(decl), 0);
+        if (GET_CODE(address) == SYMBOL_REF)
+            SYMBOL_REF_FLAG(address) =
+                lookup_attribute("long_call", DECL_MACHINE_ATTRIBUTES(decl)) != NULL_TREE;
+    }
 }
 
 /* s_register_operand is the same as register_operand, but it doesn't accept

@@ -3257,6 +3257,12 @@ duplicate_decls (newdecl, olddecl)
 	  && !(processing_template_decl && uses_template_parms (newdecl)))
 	layout_decl (newdecl, 0);
 
+      if (DECL_USER_ALIGN (olddecl))
+	{
+	  DECL_ALIGN (newdecl) = MAX (DECL_ALIGN (newdecl), DECL_ALIGN (olddecl));
+	  DECL_USER_ALIGN (newdecl) = 1;
+	}
+
       /* Merge the type qualifiers.  */
       if (TREE_READONLY (newdecl))
 	TREE_READONLY (olddecl) = 1;
@@ -7842,7 +7848,12 @@ cp_finish_decl (decl, init, asmspec_tree, need_pop, flags)
 		  TREE_PUBLIC (decl) = 1;
 		  DECL_EXTERNAL (decl) = interface_only;
 		}
-	      make_decl_rtl (decl, asmspec, toplev);
+	      /* A named array needs its own storage even when its elements
+	         are constant.  Do not defer it like a scalar constant.  */
+	      if (TREE_CODE (type) == ARRAY_TYPE)
+	        rest_of_decl_compilation (decl, asmspec, toplev, at_eof);
+	      else
+	        make_decl_rtl (decl, asmspec, toplev);
 	    }
 	  else
 	    rest_of_decl_compilation (decl, asmspec, toplev, at_eof);
@@ -13244,8 +13255,7 @@ start_function (declspecs, declarator, attrs, pre_parsed_p)
 
   ++function_depth;
 
-  if (DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (decl1))
-      && DECL_LANGUAGE (decl1) == lang_cplusplus)
+  if (DECL_DESTRUCTOR_P (decl1))
     {
       dtor_label = build_decl (LABEL_DECL, NULL_TREE, NULL_TREE);
       ctor_label = NULL_TREE;
@@ -13590,7 +13600,7 @@ finish_function (lineno, flags, nested)
 	  tree in_charge_node = lookup_name (in_charge_identifier, 0);
 	  tree virtual_size;
 	  int ok_to_optimize_dtor = 0;
-	  int empty_dtor = get_last_insn () == last_dtor_insn;
+          int empty_dtor = get_last_insn () == last_dtor_insn;
 
 	  if (current_function_assigns_this)
 	    cond = build (NE_EXPR, boolean_type_node,

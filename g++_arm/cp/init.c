@@ -1365,8 +1365,19 @@ build_member_call (type, name, parmlist)
   if (TREE_CODE (name) == TEMPLATE_ID_EXPR
       && TREE_CODE (type) == NAMESPACE_DECL)
     {
-      /* 'name' already refers to the decls from the namespace, since we
-	 hit do_identifier for template_ids.  */
+      /* A substituted template-id can still contain a lookup expression.
+	 Resolve it in its qualified namespace before overload resolution.  */
+      tree fn = TREE_OPERAND (name, 0);
+      if (TREE_CODE (fn) == LOOKUP_EXPR)
+	fn = TREE_OPERAND (fn, 0);
+      if (TREE_CODE (fn) == IDENTIFIER_NODE)
+	{
+	  fn = type == std_node ? do_scoped_id (fn, 0)
+	    : lookup_namespace_name (type, fn);
+	  if (fn == error_mark_node)
+	    return error_mark_node;
+	  name = lookup_template_function (fn, TREE_OPERAND (name, 1));
+	}
       my_friendly_assert (is_overloaded_fn (TREE_OPERAND (name, 0)), 980519);
       return build_x_function_call (name, parmlist, current_class_ref);
     }
@@ -1840,6 +1851,12 @@ tree
 decl_constant_value (decl)
      tree decl;
 {
+  /* An array declaration denotes an object, not its initializer.
+     Folding it here changes the address used by array decay and
+     reference binding.  Scalar constant values may still fold.  */
+  if (TREE_CODE (TREE_TYPE (decl)) == ARRAY_TYPE)
+    return decl;
+
   if (! TREE_THIS_VOLATILE (decl)
       && DECL_INITIAL (decl)
       && DECL_INITIAL (decl) != error_mark_node

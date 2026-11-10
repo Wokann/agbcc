@@ -1,15 +1,13 @@
 #!/bin/sh
 set -e
-CCOPT=
-CXXOPT=
-
-if [ ! -z "$CC" ]; then CCOPT=CC=$CC; fi
-if [ ! -z "$CXX" ]; then CXXOPT=CXX=$CXX; fi
+CC=${CC:-gcc}
+CXX=${CXX:-g++}
+export CC CXX
 make -C gcc clean
-make -C gcc old $CCOPT $CXXOPT
+make -C gcc old CC="$CC" CXX="$CXX"
 mv gcc/old_agbcc .
 make -C gcc clean
-make -C gcc $CCOPT $CXXOPT
+make -C gcc CC="$CC" CXX="$CXX"
 mv gcc/agbcc .
 # not sure if the ARM compiler is the old one or the new one (-DOLD_COMPILER)
 rm -f gcc_arm/config.status gcc_arm/config.cache
@@ -24,8 +22,8 @@ make clean && make cc1plus && cd ..
 mv g++_arm/cc1plus agbcp_arm
 # runtime
 make -C libgcc clean
-make -C libgcc $CCOPT $CXXOPT
+make -C libgcc CC="$CC" CXX="$CXX"
 mv libgcc/libgcc.a .
 make -C libc clean
-make -C libc $CCOPT $CXXOPT
+make -C libc CC="$CC" CXX="$CXX"
 mv libc/libc.a .

@@ -1193,7 +1193,7 @@ struct lang_decl_flags
   unsigned needs_final_overrider : 1;
   unsigned bitfield : 1;
   unsigned defined_in_class : 1;
-  unsigned dummy : 1;
+  unsigned destructor_attr : 1;
 
   tree access;
   tree context;
@@ -1229,10 +1229,11 @@ struct lang_decl
 /* For FUNCTION_DECLs: nonzero means that this function is a constructor.  */
 #define DECL_CONSTRUCTOR_P(NODE) (DECL_LANG_SPECIFIC(NODE)->decl_flags.constructor_attr)
 
-/* There ought to be a better way to find out whether or not something is
-   a destructor.  */
+/* Keep the source-level kind when an asm specifier replaces the mangled
+   name.  Retain the name test for older synthesized declarations.  */
 #define DECL_DESTRUCTOR_P(NODE)				\
-  (DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (NODE))	\
+  ((DECL_LANG_SPECIFIC(NODE)->decl_flags.destructor_attr \
+    || DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (NODE))) \
    && DECL_LANGUAGE (NODE) == lang_cplusplus)
 
 #define DECL_CONV_FN_P(NODE)						     \
@@ -2147,7 +2148,8 @@ extern tree global_delete_fndecl;
 typedef enum unification_kind_t {
   DEDUCE_CALL,
   DEDUCE_CONV,
-  DEDUCE_EXACT
+  DEDUCE_EXACT,
+  DEDUCE_ORDER
 } unification_kind_t;
 
 extern tree current_template_parms;

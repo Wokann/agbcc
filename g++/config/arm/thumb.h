@@ -1202,3 +1202,9 @@ extern char * output_return ();
 extern int    far_jump_used_p();
 extern int    is_called_in_ARM_mode ();
 
+#ifndef THUMB_PE
+extern void thumb_encode_section_info ();
+#define ENCODE_SECTION_INFO(DECL) thumb_encode_section_info (DECL)
+#define REDO_SECTION_INFO_P(DECL) (TREE_CODE (DECL) == FUNCTION_DECL)
+#endif
+

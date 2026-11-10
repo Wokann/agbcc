@@ -1561,7 +1561,7 @@ thumb_unexpanded_epilogue ()
       /* Remove the argument registers that were pushed onto the stack.  */
       if (flag_hex_asm)
       {
-        asm_fprintf (asm_out_file, "\tadd\t%s, %s, 0x%d\n",
+        asm_fprintf (asm_out_file, "\tadd\t%s, %s, #0x%x\n",
             reg_names [STACK_POINTER],
             reg_names [STACK_POINTER],
             current_function_pretend_args_size);
@@ -2109,6 +2109,9 @@ arm_valid_machine_decl_attribute (decl, attributes, attr, args)
   if (args != NULL_TREE)
     return 0;
 
+  if (is_attribute_p ("long_call", attr))
+    return TREE_CODE (decl) == FUNCTION_DECL;
+
   if (is_attribute_p ("naked", attr))
     return TREE_CODE (decl) == FUNCTION_DECL;
   
@@ -2119,6 +2122,21 @@ arm_valid_machine_decl_attribute (decl, attributes, attr, args)
 }
 #endif /* THUMB_PE */
 /* END CYGNUS LOCAL nickc/thumb-pe */
+
+/* Mark only explicitly requested far calls. The instruction selection is
+   otherwise identical to the original Thumb backend. */
+void
+thumb_encode_section_info (decl)
+     tree decl;
+{
+  if (TREE_CODE (decl) == FUNCTION_DECL)
+    {
+      rtx address = XEXP (DECL_RTL (decl), 0);
+      if (GET_CODE (address) == SYMBOL_REF)
+        SYMBOL_REF_FLAG (address) =
+          lookup_attribute ("long_call", DECL_MACHINE_ATTRIBUTES (decl)) != NULL_TREE;
+    }
+}
 
 /* s_register_operand is the same as register_operand, but it doesn't accept
    (SUBREG (MEM)...).

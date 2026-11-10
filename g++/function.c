@@ -3657,7 +3657,10 @@ instantiate_virtual_regs_1 (loc, object, extra_insns)
 		return 0;
 
 	      start_sequence ();
-	      temp = force_operand (temp, NULL_RTX);
+	      /* A bare frame or argument register can also be an invalid
+		 address for this insn.  force_operand leaves such a register
+		 unchanged; copy it to a pseudo just as for a computed sum.  */
+	      temp = copy_addr_to_reg (temp);
 	      seq = get_insns ();
 	      end_sequence ();
 

@@ -6986,6 +6986,21 @@ maybe_adjust_types_for_deduction (strict, parm, arg)
 	break;
       }
 
+    case DEDUCE_ORDER:
+      /* Partial ordering compares the referred-to type when just one
+	 parameter is a reference.  Keep exact reference comparisons when
+	 both are references, including their cv-qualification ordering.  */
+      if ((TREE_CODE (*parm) == REFERENCE_TYPE)
+	  == (TREE_CODE (*arg) == REFERENCE_TYPE))
+	return;
+      if (TREE_CODE (*parm) == REFERENCE_TYPE)
+	*parm = TREE_TYPE (*parm);
+      else
+	*arg = TREE_TYPE (*arg);
+      *parm = TYPE_MAIN_VARIANT (*parm);
+      *arg = TYPE_MAIN_VARIANT (*arg);
+      return;
+
     case DEDUCE_EXACT:
       /* There is nothing to do in this case.  */
       return;
@@ -7073,6 +7088,7 @@ type_unification_real (tparms, targs, parms, args, subr,
       break;
 
     case DEDUCE_EXACT:
+    case DEDUCE_ORDER:
       sub_strict = UNIFY_ALLOW_NONE;
       break;
       
@@ -7097,6 +7113,9 @@ type_unification_real (tparms, targs, parms, args, subr,
 	   template args from other function args.  */
 	continue;
 
+      if (!subr && strict == DEDUCE_ORDER)
+	maybe_adjust_types_for_deduction (strict, &parm, &arg);
+
       /* Conversions will be performed on a function argument that
 	 corresponds with a function parameter that contains only
 	 non-deducible template parameters and explicitly specified
@@ -7113,7 +7132,7 @@ type_unification_real (tparms, targs, parms, args, subr,
 	      arg = NULL_TREE;
 	    }
 
-	  if (strict == DEDUCE_EXACT)
+	  if (strict == DEDUCE_EXACT || strict == DEDUCE_ORDER)
 	    {
 	      if (same_type_p (parm, type))
 		continue;
@@ -7153,7 +7172,7 @@ type_unification_real (tparms, targs, parms, args, subr,
 	  arg = TREE_TYPE (arg);
 	}
 #endif
-      if (!subr)
+      if (!subr && strict != DEDUCE_ORDER)
 	maybe_adjust_types_for_deduction (strict, &parm, &arg);
 
       switch (unify (tparms, targs, parm, arg, sub_strict,
@@ -7986,7 +8005,7 @@ get_bindings_real (fn, decl, explicit_args, check_rettype)
   i = fn_type_unification (fn, explicit_args, targs, 
 			   decl_arg_types,
 			   TREE_TYPE (TREE_TYPE (decl)),
-			   DEDUCE_EXACT,
+			   check_rettype ? DEDUCE_EXACT : DEDUCE_ORDER,
 			   extra_fn_arg);
 
   if (i != 0)

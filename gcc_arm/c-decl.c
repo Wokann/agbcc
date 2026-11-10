@@ -1948,6 +1948,12 @@ duplicate_decls (newdecl, olddecl, different_binding_level)
       /* Keep the old rtl since we can safely use it.  */
       DECL_RTL (newdecl) = DECL_RTL (olddecl);
 
+      if (DECL_USER_ALIGN (olddecl))
+	{
+	  DECL_ALIGN (newdecl) = MAX (DECL_ALIGN (newdecl), DECL_ALIGN (olddecl));
+	  DECL_USER_ALIGN (newdecl) = 1;
+	}
+
       /* Merge the type qualifiers.  */
       if (DECL_BUILT_IN_NONANSI (olddecl) && TREE_THIS_VOLATILE (olddecl)
 	  && !TREE_THIS_VOLATILE (newdecl))

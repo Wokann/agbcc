@@ -1161,7 +1161,7 @@ add_method (type, fields, method)
 	  /* A new constructor or destructor.  Constructors go in 
 	     slot 0; destructors go in slot 1.  */
 	  int slot 
-	    = DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (method)) ? 1 : 0;
+	    = DECL_DESTRUCTOR_P (method) ? 1 : 0;
 
 	  TREE_VEC_ELT (method_vec, slot)
 	    = build_overload (method, TREE_VEC_ELT (method_vec, slot));
@@ -2391,11 +2391,11 @@ overrides (fndecl, base_fndecl)
      tree fndecl, base_fndecl;
 {
   /* Destructors have special names.  */
-  if (DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (base_fndecl))
-      && DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (fndecl)))
+  if (DECL_DESTRUCTOR_P (base_fndecl)
+      && DECL_DESTRUCTOR_P (fndecl))
     return 1;
-  if (DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (base_fndecl))
-      || DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (fndecl)))
+  if (DECL_DESTRUCTOR_P (base_fndecl)
+      || DECL_DESTRUCTOR_P (fndecl))
     return 0;
   if (DECL_NAME (fndecl) == DECL_NAME (base_fndecl))
     {
@@ -3008,7 +3008,7 @@ check_for_override (decl, ctype)
 	{
 	  tree tmp = get_matching_virtual
 	    (base_binfo, decl,
-	     DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (decl)));
+	     DECL_DESTRUCTOR_P (decl));
 	  if (tmp)
 	    {
 	      /* If this function overrides some virtual in some base

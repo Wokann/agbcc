@@ -1018,7 +1018,7 @@ dump_function_decl (t, v)
       OB_PUTC2 (':',':');
     }
 
-  if (DESTRUCTOR_NAME_P (name) && DECL_LANGUAGE (t) == lang_cplusplus)
+  if (DECL_DESTRUCTOR_P (t))
     parmtypes = TREE_CHAIN (parmtypes);
   
   dump_function_name (t);

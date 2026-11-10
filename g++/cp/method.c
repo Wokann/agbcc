@@ -2146,6 +2146,8 @@ emit_thunk (thunk_fndecl)
     DECL_RESULT (thunk_fndecl) = NULL_TREE;
     DECL_LANG_SPECIFIC (thunk_fndecl) = DECL_LANG_SPECIFIC (function);
     copy_lang_decl (thunk_fndecl);
+    /* The adjusted forwarding entry is not itself a destructor. */
+    DECL_LANG_SPECIFIC (thunk_fndecl)->decl_flags.destructor_attr = 0;
     DECL_INTERFACE_KNOWN (thunk_fndecl) = 1;
     DECL_NOT_REALLY_EXTERN (thunk_fndecl) = 1;
 
@@ -2443,7 +2445,7 @@ synthesize_method (fndecl)
 
   if (DECL_NAME (fndecl) == ansi_opname[MODIFY_EXPR])
     do_build_assign_ref (fndecl);
-  else if (DESTRUCTOR_NAME_P (DECL_ASSEMBLER_NAME (fndecl)))
+  else if (DECL_DESTRUCTOR_P (fndecl))
     ;
   else
     {

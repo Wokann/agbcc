@@ -1090,4 +1090,8 @@ extern void thumb_print_operand(FILE *, rtx, int);
 extern int thumb_return_in_memory(tree);
 extern void thumb_override_options();
 extern int arm_valid_machine_decl_attribute(tree, tree, tree, tree);
+extern void thumb_encode_section_info(tree);
 extern int s_register_operand(rtx, enum machine_mode);
+
+#define ENCODE_SECTION_INFO(DECL) thumb_encode_section_info(DECL)
+#define REDO_SECTION_INFO_P(DECL) (TREE_CODE(DECL) == FUNCTION_DECL)

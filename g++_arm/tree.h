@@ -1075,6 +1075,8 @@ struct tree_type
 #define DECL_SIZE(NODE) (DECL_CHECK (NODE)->decl.size)
 /* Holds the alignment required for the datum.  */
 #define DECL_ALIGN(NODE) (DECL_CHECK (NODE)->decl.frame_size.u)
+/* Nonzero when the declaration has an explicit alignment attribute.  */
+#define DECL_USER_ALIGN(NODE) (DECL_CHECK (NODE)->decl.user_align)
 /* Holds the machine mode corresponding to the declaration of a variable or
    field.  Always equal to TYPE_MODE (TREE_TYPE (decl)) except for a
    FIELD_DECL.  */
@@ -1323,6 +1325,7 @@ struct tree_decl
   unsigned non_addr_const_p : 1;
   unsigned no_instrument_function_entry_exit : 1;
   unsigned no_check_memory_usage : 1;
+  unsigned user_align : 1;
 
   /* For a FUNCTION_DECL, if inline, this is the size of frame needed.
      If built-in, this is the code for which built-in function.

@@ -688,7 +688,10 @@ decl_attributes (node, attributes, prefix_attributes)
 	      error_with_decl (decl,
 			       "alignment may not be specified for `%s'");
 	    else
-	      DECL_ALIGN (decl) = align;
+	      {
+		DECL_ALIGN (decl) = align;
+		DECL_USER_ALIGN (decl) = 1;
+	      }
 	  }
 	  break;
 
