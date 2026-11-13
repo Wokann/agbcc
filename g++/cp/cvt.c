@@ -340,6 +340,13 @@ build_up_reference (type, arg, flags)
 
   my_friendly_assert (TREE_CODE (type) == REFERENCE_TYPE, 187);
 
+  /* A const reference to a bit-field binds a copy, not the field itself.
+     Let the normal temporary-binding path provide addressable storage.  */
+  if (CP_TYPE_CONST_NON_VOLATILE_P (target_type)
+      && TREE_CODE (arg) == COMPONENT_REF
+      && DECL_C_BIT_FIELD (TREE_OPERAND (arg, 1)))
+    arg = build1 (NON_LVALUE_EXPR, argtype, arg);
+
   if ((flags & DIRECT_BIND) && ! real_lvalue_p (arg))
     {
       tree targ = arg;
