@@ -425,9 +425,11 @@ compute_delayinout (n_blocks, n_exprs, s_preds, antloc,
   /* This is constant throughout the flow equations below, so compute
      it once to save time.  */
   anti_and_early = sbitmap_vector_alloc (n_blocks, n_exprs);
+  sbitmap_vector_zero (anti_and_early, n_blocks);
   for (bb = 0; bb < n_blocks; bb++)
     sbitmap_a_and_b (anti_and_early[bb], antin[bb], earlyin[bb]);
   
+  sbitmap_vector_zero (delayin, n_blocks);
   sbitmap_vector_zero (delayout, n_blocks);
   sbitmap_copy (delayin[0], anti_and_early[0]);
 
@@ -483,6 +485,7 @@ compute_latein (n_blocks, n_exprs, s_succs, antloc, delayin, latein)
   sbitmap temp_bitmap;
 
   temp_bitmap = sbitmap_alloc (n_exprs);
+  sbitmap_vector_zero (latein, n_blocks);
 
   for (bb = 0; bb < n_blocks; bb++)
     {
@@ -576,6 +579,7 @@ compute_redundant (n_blocks, n_exprs, antloc, latein, isoout, redundant)
   sbitmap temp_bitmap;
 
   temp_bitmap = sbitmap_alloc (n_exprs);
+  sbitmap_zero (temp_bitmap);
 
   for (bb = 0; bb < n_blocks; bb++)
     {
