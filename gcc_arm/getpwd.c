@@ -7,7 +7,7 @@
    BSD systems) now provides getcwd as called for by POSIX.  Allow for
    the few exceptions to the general rule here.  */
 
-#if !(defined (POSIX) || defined (USG) || defined (VMS)) || defined (HAVE_GETWD)
+#if !(defined (POSIX) || defined (USG) || defined (VMS) || defined (_WIN32)) || defined (HAVE_GETWD)
 #define getcwd(buf,len) getwd(buf)
 #ifdef MAXPATHLEN
 #define GUESSPATHLEN (MAXPATHLEN + 1)
