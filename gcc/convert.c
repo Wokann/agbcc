@@ -319,8 +319,7 @@ convert_to_integer (type, expr)
 		    return convert (type,
 				    fold (build (ex_form, typex,
 						 convert (typex, arg0),
-						 convert (typex, arg1),
-						 0)));
+						 convert (typex, arg1))));
 		  }
 	      }
 	  }

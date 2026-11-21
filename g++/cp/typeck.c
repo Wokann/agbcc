@@ -4806,7 +4806,7 @@ unary_complex_lvalue (code, arg)
 
     if (TREE_CODE (arg) == SAVE_EXPR && TREE_CODE (targ) == INDIRECT_REF)
       return build (SAVE_EXPR, build_pointer_type (TREE_TYPE (arg)),
-		     TREE_OPERAND (targ, 0), current_function_decl, NULL);
+		     TREE_OPERAND (targ, 0), current_function_decl, NULL_TREE);
   }
 
   /* Don't let anything else be handled specially.  */

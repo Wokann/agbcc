@@ -1,12 +1,30 @@
 #!/bin/sh
 set -e
-CC=${CC:-gcc}
+host=i686-pc-linux
+EXE=
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*)
+        host=i686-pc-mingw32
+        EXE=.exe
+        case "${MSYSTEM:-}" in
+            UCRT64)
+                CC=${CC:-'gcc -std=gnu89 -fcommon -static'}
+                CXX=${CXX:-'g++ -static'}
+                ;;
+            CLANGARM64)
+                CC=${CC:-'clang -std=gnu89 -fcommon'}
+                CXX=${CXX:-clang++}
+                ;;
+        esac
+        ;;
+    Darwin)
+        CC=${CC:-'gcc-14 -std=gnu89 -fcommon'}
+        CXX=${CXX:-g++-14}
+        ;;
+esac
+CC=${CC:-'gcc -std=gnu89 -fcommon'}
 CXX=${CXX:-g++}
 export CC CXX
-case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) host=i686-pc-mingw32; EXE=.exe ;;
-    *) host=i686-pc-linux; EXE= ;;
-esac
 make -C gcc clean
 make -C gcc old CC="$CC" CXX="$CXX"
 mv "gcc/old_agbcc$EXE" .

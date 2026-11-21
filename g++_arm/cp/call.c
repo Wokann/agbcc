@@ -3430,7 +3430,8 @@ build_over_call (cand, args, flags)
 	  else if (TYPE_HAS_TRIVIAL_INIT_REF (DECL_CONTEXT (fn)))
 	    {
 	      val = build_decl (VAR_DECL, NULL_TREE, DECL_CONTEXT (fn));
-	      val = build (TARGET_EXPR, DECL_CONTEXT (fn), val, arg, 0, 0);
+	      val = build (TARGET_EXPR, DECL_CONTEXT (fn), val, arg,
+			   NULL_TREE, NULL_TREE);
 	      TREE_SIDE_EFFECTS (val) = 1;
 	      return val;
 	    }

@@ -2224,8 +2224,8 @@ array_type_nelts (type)
     {
       STRIP_NOPS (min);
       if (TREE_CODE (min) == SAVE_EXPR)
-	min = build (RTL_EXPR, TREE_TYPE (TYPE_MIN_VALUE (index_type)), 0,
-		     SAVE_EXPR_RTL (min));
+	min = build (RTL_EXPR, TREE_TYPE (TYPE_MIN_VALUE (index_type)),
+		     NULL_TREE, SAVE_EXPR_RTL (min));
       else
 	min = TYPE_MIN_VALUE (index_type);
     }
@@ -2234,8 +2234,8 @@ array_type_nelts (type)
     {
       STRIP_NOPS (max);
       if (TREE_CODE (max) == SAVE_EXPR)
-	max = build (RTL_EXPR, TREE_TYPE (TYPE_MAX_VALUE (index_type)), 0,
-		     SAVE_EXPR_RTL (max));
+	max = build (RTL_EXPR, TREE_TYPE (TYPE_MAX_VALUE (index_type)),
+		     NULL_TREE, SAVE_EXPR_RTL (max));
       else
 	max = TYPE_MAX_VALUE (index_type);
     }
