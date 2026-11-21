@@ -1,37 +1,118 @@
-name: Build and release agbcc
+name: Build agbcc
 
-on: [push]
+on:
+  push:
+    branches: [cp]
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x86_64
+            runner: ubuntu-24.04
+            arch: X64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            arch: ARM64
+          - platform: macos-x86_64
+            runner: macos-15-intel
+            arch: X64
+          - platform: macos-arm64
+            runner: macos-26
+            arch: ARM64
+          - platform: windows-x86_64
+            runner: windows-2025
+            arch: X64
+            msystem: UCRT64
+            packages: mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-arm-none-eabi-gcc
+          - platform: windows-arm64
+            runner: windows-11-arm
+            arch: ARM64
+            msystem: CLANGARM64
+            packages: mingw-w64-clang-aarch64-clang mingw-w64-clang-aarch64-gcc-compat mingw-w64-clang-aarch64-arm-none-eabi-binutils
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      EXPECTED_ARCH: ${{ matrix.arch }}
+      GIT_CONFIG_COUNT: '2'
+      GIT_CONFIG_KEY_0: core.symlinks
+      GIT_CONFIG_VALUE_0: 'true'
+      GIT_CONFIG_KEY_1: core.autocrlf
+      GIT_CONFIG_VALUE_1: 'false'
+      HOMEBREW_NO_AUTO_UPDATE: '1'
     steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies (Ubuntu)
-        shell: bash
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Linux prerequisites
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi
-      - name: Build
-        shell: bash
+          sudo apt-get install -y build-essential binutils-arm-none-eabi file
+      - name: Install macOS prerequisites
+        if: runner.os == 'macOS'
         run: |
-          sh build.sh
-      - name: Install to temp dir
-        shell: bash
-        run: |
-          sh install.sh TEMPDIR
-      - name: Create release archive
-        shell: bash
-        run: |
-          tar -C TEMPDIR/tools/agbcc -czf agbcc.tar.gz bin include lib
-      - name: Upload archive
-        uses: actions/upload-artifact@v2
+          brew install make gcc@14 arm-none-eabi-binutils
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+      - name: Install Windows prerequisites
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
         with:
-          name: agbcc.tar.gz
-          path: |
-            agbcc.tar.gz
-      - name: Update release
-        uses: johnwbyrd/update-release@v1.0.0
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: make file ${{ matrix.packages }}
+      - name: Build and test (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: &build |
+          set -euo pipefail
+          test "$RUNNER_ARCH" = "$EXPECTED_ARCH"
+          case "$RUNNER_ARCH" in
+            X64) file_arch='x86[-_]64|AMD64' ;;
+            ARM64) file_arch='aarch64|arm64' ;;
+          esac
+          exe=
+          if [[ "$RUNNER_OS" == Windows ]]; then exe=.exe; fi
+          test -L g++/choose-temp.c
+          scratch=$(mktemp -d)
+          if ! MAKEFLAGS=-j4 ./build.sh > "$scratch/build.log" 2>&1; then
+            tail -100 "$scratch/build.log"
+            exit 1
+          fi
+          ./install.sh "$scratch"
+          toolchain="$scratch/tools/agbcc"
+          printf '%s\n' 'int probe(int value) { return value + 1; }' > "$scratch/probe.i"
+          cp "$scratch/probe.i" "$scratch/probe.ii"
+          for compiler in old_agbcc agbcc agbcc_arm agbcp agbcp_arm; do
+            executable="$toolchain/bin/$compiler$exe"
+            description=$(file -Lb "$executable")
+            printf '%s: %s\n' "$compiler" "$description"
+            grep -Eiq "$file_arch" <<< "$description"
+            input="$scratch/probe.i"
+            if [[ "$compiler" == agbcp* ]]; then input="$scratch/probe.ii"; fi
+            "$executable" -O2 -o "$scratch/$compiler.s" "$input"
+            test -s "$scratch/$compiler.s"
+          done
+          for archive in libgcc.a libc.a; do
+            arm-none-eabi-ar t "$toolchain/lib/$archive" > "$scratch/$archive.txt"
+            test -s "$scratch/$archive.txt"
+          done
+          tar -C "$toolchain" -czf "agbcc-$PLATFORM.tar.gz" bin include lib
+      - name: Build and test (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: *build
+      - name: Upload toolchain archive
+        uses: actions/upload-artifact@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: agbcc.tar.gz
+          name: agbcc-${{ matrix.platform }}
+          path: agbcc-${{ matrix.platform }}.tar.gz
+          if-no-files-found: error
+          compression-level: 0
