@@ -1397,6 +1397,10 @@ expand_inline_function (fndecl, parms, target, ignore, type,
      for MAP->LABEL_MAP.  */
   rtx *real_label_map = 0;
 
+  /* A naked body supplies its own entry and return sequence.  */
+  if (lookup_attribute ("naked", DECL_MACHINE_ATTRIBUTES (fndecl)))
+    return (rtx) (HOST_WIDE_INT) -1;
+
   /* Allow for equivalences of the pseudos we make for virtual fp and ap.  */
   max_regno = MAX_REGNUM (header) + 3;
   if (max_regno < FIRST_PSEUDO_REGISTER)
